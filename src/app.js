@@ -14,8 +14,6 @@ app.use(express.json())
 
 app.use("/", auth)
 
-
-
 connectDB().then(() => {
     console.log("Database connected successfully");
     app.listen(process.env.PORT, () => {
