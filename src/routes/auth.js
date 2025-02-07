@@ -1,14 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const userAuth = require("../utils/userAuth");
 const User = require("../model/User");
 const jwt = require("jsonwebtoken")
 const bcrypt = require("bcryptjs");  
 
-
-router.get("/profile", userAuth, (req, res) => {
-    res.json(req.user);
-})
 
 router.post("/signup", async (req, res) => {
     try {
