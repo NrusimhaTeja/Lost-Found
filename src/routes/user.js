@@ -4,22 +4,6 @@ const userAuth = require("../utils/userAuth");
 const User = require("../model/User");
 const Item = require("../model/Item")
 
-router.get("/item/:itemId", userAuth, async (req, res) => {
-    try {
-        const itemId = req.params.itemId;
-        const item = await Item.findById(itemId).populate("currentHolder", "firstName lastName");
-
-        if (!item) {
-            return res.status(404).json({"message" : "Item not found"});
-        }
-        res.json(item);
-    } catch(err) {
-        res.json({"message": err.message})
-    }
-    
-
-})
-
 router.post("/report/item/:status", userAuth, async (req, res) => {
     try {
         const status = req.params.status;
@@ -41,13 +25,14 @@ router.post("/report/item/:status", userAuth, async (req, res) => {
     }
 })
 
-router.patch("/item/:itemId/claim", userAuth, async (req, res) => {
-    res.json({"message": "under progress"});
-})
 
-router.get("/item", userAuth, async (req, res) => {
+router.get("/item/:status", userAuth, async (req, res) => {
     try {
-        const itemList = await Item.find({currentHolder: req.user._id});
+        const status = req.params.status;
+        if (!["lost", "found", "claimed"].includes(status)) {
+            throw new Error("invalid request");
+        }
+        const itemList = await Item.find({status});
         if (!itemList) {
             return res.json({"message": "No item found"});
         }
@@ -56,5 +41,9 @@ router.get("/item", userAuth, async (req, res) => {
         res.json({"error": err.message});
     }
 })
+
+
+
+
 
 module.exports = router;

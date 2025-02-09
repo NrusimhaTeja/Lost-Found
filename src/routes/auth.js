@@ -20,6 +20,7 @@ router.post("/signup", async (req, res) => {
     }
 })
 
+
 router.post("/login", async (req, res) => {
     try {
         const {email, password} = req.body;
@@ -40,6 +41,7 @@ router.post("/login", async (req, res) => {
         res.json({"message" : err.message});
     }
 })
+
 
 router.post("/logout", (req, res) => {
     res.cookie("token", null, {maxAge: 0});

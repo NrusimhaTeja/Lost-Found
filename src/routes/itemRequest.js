@@ -5,23 +5,31 @@ const User = require("../model/User");
 const Item = require("../model/Item");
 const ItemRequest = require("../model/ItemRequest");
 
-router.post("/request/send/:itemId", userAuth, async (req, res) => {
+router.post("/request/send/:type/:itemId", userAuth, async (req, res) => {
     try {
         const itemId = req.params.itemId;
+        const requestType = req.params.type;
         const itemDetails = await Item.findById(itemId);
         if (!itemDetails) {
             return res.status(404).json({"message": "item not found"});
         }
-        if (itemDetails.status === "lost" || itemDetails.currentHolder === req.user._id) {
+        if (!["return", "claim"].includes(requestType)) {
+            throw new Error("Bad request");
+        }
+        if ((itemDetails.status === "lost"  && requestType === "claim") || 
+            (itemDetails.status !== "lost" && requestType === "return") || 
+            itemDetails.currentHolder === req.user._id) {
             return res.status(400).json({"error": "bad request"});
         }
-        const AlreadyRequested = await ItemRequest.findOne({itemId, requestedBy: req.user._id});
+        const AlreadyRequested = await ItemRequest.findOne({itemId, requestedBy: req.user._id, status: "pending"});
         if (AlreadyRequested) {
             return res.json({"message": "request already exists"});
         }
         const request = ItemRequest({
             itemId,
-            requestedBy: req.user._id
+            requestType,
+            requestedBy: req.user._id,
+            requestedTo: itemDetails.currentHolder
         });
         await request.save();
         res.json({"message": "request sent successfully"});
@@ -31,36 +39,17 @@ router.post("/request/send/:itemId", userAuth, async (req, res) => {
     }
 })
 
-router.get("/request/send", userAuth, async (req, res) => {
-    try {
-        const userId = req.user._id;
-        const itemList = await ItemRequest.find({requestedBy: userId})
-                                            .populate({
-                                                path: "itemId",
-                                                populate: {path: "currentHolder"}
-                                            })
-        const data = itemList.map((item) => {
-            return {status: item.status, itemDetails: item.itemId};
-        })
-        res.json(data);
-    } catch(err) {
-        res.json({"error": err.message});
-    }
-})
 
 router.post("/request/review/:status/:requestId", userAuth, async (req, res) => {
     try {
         const requestId = req.params.requestId;
         const status = req.params.status;
-
+        
         if (!["rejected", "accepted"].includes(status)) {
             return res.json({"message": "Invalid operation"});
         }
-        const request = await ItemRequest.findById(requestId).populate({
-            path: "itemId",
-            populate: {path: "currentHolder"}
-        });
-        if (!request || request.status !== "pending" || !request.itemId.currentHolder._id.equals(req.user._id)) {
+        const request = await ItemRequest.findById(requestId)
+        if (!request || request.status !== "pending" || !request.requestedTo.equals(req.user._id)) {
             return res.json({"message": "Invalid operation"});
         }
         if (status === "rejected") {
@@ -71,9 +60,8 @@ router.post("/request/review/:status/:requestId", userAuth, async (req, res) => 
             const requestUserId = request.requestedBy;
             const item = await Item.findById(request.itemId._id);
             request.status = "accepted";
-            console.log(item);
-            console.log(requestUserId);
-            item.currentHolder = requestUserId;
+            item.currentHolder = (request.requestType === "claim" ? requestUserId : item.currentHolder);
+            item.status = "claimed"
             await request.save();
             await item.save();
             return res.json({"message": "request accepted successfully"});
@@ -81,9 +69,30 @@ router.post("/request/review/:status/:requestId", userAuth, async (req, res) => 
     } catch(err) {
         res.json({"error": err.message})
     }
-
+    
 })
 
+
+router.get("/request/send", userAuth, async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const requestSendList = await ItemRequest.find({requestedBy: userId});
+        res.json(requestSendList);
+    } catch(err) {
+        res.json({"error": err.message});
+    }
+})
+
+
+router.get("/request/receive", userAuth, async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const requestReceivedList = await ItemRequest.find({requestedTo: userId});
+        res.json(requestReceivedList);
+    } catch(err) {
+        res.json({"error": err.message});
+    }
+})
 
 
 

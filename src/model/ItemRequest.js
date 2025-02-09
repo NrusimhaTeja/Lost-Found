@@ -9,11 +9,21 @@ const itemRequestSchema = new mongoose.Schema({
         required: true,
         ref: 'Item'
     },
+    requestType: {
+        type: String,
+        required: true,
+        enum: ["claim", "return"]
+    },
     requestedBy: {
         type: mongoose.Schema.Types.ObjectId, 
         required: true,
         ref: 'User'
     }, 
+    requestedTo: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
+        ref: "User"
+    },
     status: {
         type: String,
         enum: ["pending", "accepted", "rejected"],
