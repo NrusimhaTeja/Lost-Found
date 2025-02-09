@@ -26,6 +26,22 @@ router.post("/report/item/:status", userAuth, async (req, res) => {
 })
 
 
+router.get("/item/:itemId/detail", userAuth, async (req, res) => {
+    try {
+        const itemId = req.params.itemId;
+        const itemDetails = await Item.findById(itemId);
+        if (!itemDetails) {
+            throw new Error("Item not found");
+        }
+        res.json(itemDetails);
+    } catch(err) {
+        res.status(400).json({"error": err.message});
+    }
+    
+
+})
+
+
 router.get("/item/:status", userAuth, async (req, res) => {
     try {
         const status = req.params.status;
@@ -41,9 +57,6 @@ router.get("/item/:status", userAuth, async (req, res) => {
         res.json({"error": err.message});
     }
 })
-
-
-
 
 
 module.exports = router;
