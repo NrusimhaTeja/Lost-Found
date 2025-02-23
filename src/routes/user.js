@@ -2,7 +2,15 @@ const express = require("express");
 const router = express.Router();
 const userAuth = require("../utils/userAuth");
 const User = require("../model/User");
-const Item = require("../model/Item")
+const Item = require("../model/Item");
+
+router.get("/profile/view", userAuth, async(req, res) => {
+    try{
+        res.send(req.user);
+    } catch(err) {
+        res.json({"message": err.message});
+    }
+})
 
 router.post("/report/item/:status", userAuth, async (req, res) => {
     try {
