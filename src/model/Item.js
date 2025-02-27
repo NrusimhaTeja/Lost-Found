@@ -28,7 +28,17 @@ const itemSchema = new mongoose.Schema({
         type: Date,
         required: true,
         default: Date.now
-    }
+    }, 
+    images: [{
+        public_id: {
+          type: String,
+          required: true
+        },
+        url: {
+          type: String,
+          required: true
+        }
+      }],
 }, {timestamps: true});
 
 

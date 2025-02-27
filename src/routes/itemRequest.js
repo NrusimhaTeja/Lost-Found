@@ -72,7 +72,6 @@ router.post("/request/review/:status/:requestId", userAuth, async (req, res) => 
     
 })
 
-
 router.get("/request/send", userAuth, async (req, res) => {
     try {
         const userId = req.user._id;

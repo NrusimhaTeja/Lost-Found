@@ -2,12 +2,12 @@ const express = require("express");
 const connectDB = require("./config/database");
 const userAuth = require("./utils/userAuth");
 const cookieParser = require("cookie-parser");
-const auth = require("./routes/auth")
-const user = require("./routes/user")
-const itemRequest = require("./routes/itemRequest")
 const cors = require("cors")
 
 require('dotenv').config();
+const itemRequest = require("./routes/itemRequest")
+const auth = require("./routes/auth")
+const user = require("./routes/user")
 
 const app = express();
 
@@ -17,7 +17,7 @@ app.use(cors({
 }))
 app.use(cookieParser())
 app.use(express.json())
-
+app.use(express.urlencoded({extended: true}));
 
 app.use("/", auth);
 app.use("/", user);
