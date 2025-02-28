@@ -4,46 +4,8 @@ const userAuth = require("../utils/userAuth");
 const User = require("../model/User");
 const Item = require("../model/Item");
 const multer = require('multer');
-const cloudinary = require('cloudinary').v2;
-
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-// Add this near the top of your router file
-console.log("Cloudinary Environment Variables:");
-console.log("CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME || "NOT SET");
-console.log("API_KEY:", process.env.CLOUDINARY_API_KEY ? "SET (hidden for security)" : "NOT SET");
-console.log("API_SECRET:", process.env.CLOUDINARY_API_SECRET ? "SET (hidden for security)" : "NOT SET");
-
-// Set up multer for memory storage
-const storage = multer.memoryStorage();
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
-});
-
-// Helper function to upload to Cloudinary
-async function uploadToCloudinary(file) {
-  return new Promise((resolve, reject) => {
-    // Create a dataURI from the buffer
-    const b64 = Buffer.from(file.buffer).toString('base64');
-    const dataURI = `data:${file.mimetype};base64,${b64}`;
-    
-    cloudinary.uploader.upload(dataURI, {
-      resource_type: 'auto'
-    }, (error, result) => {
-      if (error) {
-        console.error('Cloudinary upload error:', error);
-        reject(error);
-      } else {
-        resolve(result);
-      }
-    });
-  });
-}
+const uploadToCloudinary = require("../utils/uploadToCloudinary");
+const {upload} = require("../config/cloudinary");
 
 // POST endpoint for reporting lost/found items
 router.post("/report/item/:status", 
@@ -137,19 +99,6 @@ router.post("/report/item/:status",
     }
   }
 );
-
-// Add this test route to verify Cloudinary credentials
-router.get("/test-cloudinary", async (req, res) => {
-  try {
-    const result = await cloudinary.uploader.upload(
-      "https://cloudinary-res.cloudinary.com/image/upload/cloudinary_logo.png",
-      { public_id: "test_upload" }
-    );
-    res.json({ success: true, result });
-  } catch (error) {
-    res.json({ success: false, error: error.message });
-  }
-});
 
 router.get("/profile/view", userAuth, async (req, res) => {
   try {
