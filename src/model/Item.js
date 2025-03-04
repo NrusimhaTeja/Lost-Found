@@ -19,6 +19,11 @@ const itemSchema = new mongoose.Schema({
         enum: ["lost", "found", "claimed"],
         required: true
     },
+    owner: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: null,
+        ref: 'User'
+    },
     currentHolder: {
         type: mongoose.Schema.Types.ObjectId,
         default: null,
